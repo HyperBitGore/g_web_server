@@ -1,36 +1,23 @@
 #pragma once
-#include <iostream>
 #include <fstream>
 #include <vector>
-#include <string>
-#include <sstream>
+#include "Parse.h"
 #include <thread>
 #include <WS2tcpip.h>
 
 #pragma comment (lib, "ws2_32.lib")
 
-//probably only gonna implement post, get, and put
-enum class COM {POST, GET, HEAD, PUT, DEL, CONNECT, OPTIONS, TRACE};
 
-struct Command {
-	COM run;
-	std::string location;
-};
 
 //https://developer.mozilla.org/en-US/docs/Glossary/HTTP_header
-
 class Server {
 private:
 	char buf[8192];
 	fd_set master;
 	SOCKET listener;
 	//only return identity encoding for now
-	Command parseHeader(char* header) {
-		//read through header data and return enum command to run	
-		return {COM::GET, "index.html"};
-	}
 	//send html data back to socket, or whatever you want
-	void GET_Request(SOCKET sock, std::string path) {
+	void GET_Request(SOCKET sock, std::string path, std::string start) {
 		//put request file in memory
 		std::stringstream sstream;
 		std::ifstream f;
@@ -39,9 +26,9 @@ private:
 		std::string file = sstream.str();
 		//create response
 		std::ostringstream oss;
-		oss << "HTTP/1.1 200 OK\r\n";
-		oss << "Cache-Control: no-cache, private\r\n";
-		oss << "Content-Encoding: identity\r\n";
+		oss << start;
+		//https://www.iana.org/assignments/media-types/media-types.xhtml
+		//need to categorize file types like this
 		oss << "Content-Type: text/html\r\n";
 		oss << "Content-Length: " + std::to_string(file.size()) + "\r\n";
 		oss << "\r\n";
@@ -73,7 +60,7 @@ public:
 	void runCommand(Command com, SOCKET sock) {
 		switch (com.run) {
 		case COM::GET:
-			GET_Request(sock, com.location);
+			GET_Request(sock, com.location, com.header);
 			break;
 		}
 	}
@@ -106,10 +93,6 @@ public:
 				}
 				ZeroMemory(buf, 8192);
 				//might need to do reply here, but we'll see
-				int bytes = recv(sock, buf, 8192, 0);
-				//parse the header from user and then run whatever command it sent
-				Command c = parseHeader(buf);
-				runCommand(c, sock);
 				FD_SET(clientsocket, &master);
 			}
 			else {
@@ -124,7 +107,7 @@ public:
 				}
 				else {
 					//parse the header from user and then run whatever command it sent
-					Command c = parseHeader(buf);
+					Command c = Parse::parseHeader(buf, bytes);
 					runCommand(c, sock);
 				}
 			}

@@ -43,17 +43,18 @@ namespace UTIL{
 		return false;
 	}
 	//make sure you're searching in something with newlines or else will go out of bounds
-	static bool containedBeforeNewline(char* start, std::string word) {
+	static bool containedBeforeNewline(char* start, std::string word, size_t size) {
 		char* dt = start;
+		size_t c = 0;
 		size_t posword = 0;
-		while (*dt != '\n') {
+		while (c < size && *dt != '\n') {
 			if (*dt == word[posword]) {
 				posword++;
 				if (posword >= word.size()) {
 					return true;
 				}
 			}
-
+			c++;
 			dt++;
 		}
 		return false;
