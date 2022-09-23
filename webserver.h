@@ -7,35 +7,50 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
+//need larger file sending
+//need file security; can't grab whatever file you want
+//add all mime types
+//add config file
+//set to server to correct port
+//implement POST
 
 
 //https://developer.mozilla.org/en-US/docs/Glossary/HTTP_header
 class Server {
 private:
+	Parse parser;
 	char buf[8192];
 	fd_set master;
 	SOCKET listener;
 	//only return identity encoding for now
 	//send html data back to socket, or whatever you want
 	void GET_Request(SOCKET sock, std::string path, std::string start) {
-		//put request file in memory
-		std::stringstream sstream;
-		std::ifstream f;
-		f.open(path);
-		sstream << f.rdbuf();
-		std::string file = sstream.str();
-		//create response
-		std::ostringstream oss;
-		oss << start;
-		//https://www.iana.org/assignments/media-types/media-types.xhtml
-		//need to categorize file types like this
-		oss << "Content-Type: text/html\r\n";
-		oss << "Content-Length: " + std::to_string(file.size()) + "\r\n";
-		oss << "\r\n";
-		oss << file;
+		//get file size and decide whether to send multiple packets; if greater than 1mb send multiple packets
+		int size = parser.getFileSize(path);
+		if (size > 1048576) {
+			//send intial packet with header, and then send the rest of the file in 1mb packets
+		}
+		else {
+			//put request file in memory
+			std::stringstream sstream;
+			std::ifstream f;
+			f.open(path.c_str(), std::ios::binary);
+			sstream << f.rdbuf();
+			std::string file = sstream.str();
+			//create response
+			std::ostringstream oss;
+			oss << start;
+			//https://www.iana.org/assignments/media-types/media-types.xhtml
+			//need to categorize file types like this
+			parser.categorizeFile(oss, path);
+			//if file size is too big for one http packet, send multiple
+			oss << "Content-Length: " + std::to_string(file.size()) + "\r\n";
+			oss << "\r\n";
+			oss << file;
 
-		//send requested file over socket
-		send(sock, oss.str().c_str(), oss.str().size() + 1, 0);
+			//send requested file over socket
+			send(sock, oss.str().c_str(), oss.str().size() + 1, 0);
+		}
 	}
 
 public:
@@ -54,8 +69,8 @@ public:
 		//tells winsock that the socket is for listening
 		listen(listener, SOMAXCONN);
 		FD_SET(listener, &master);
-		//
-
+		//generate file types
+		parser.generateFileTypes();
 	}
 	void runCommand(Command com, SOCKET sock) {
 		switch (com.run) {
@@ -107,8 +122,12 @@ public:
 				}
 				else {
 					//parse the header from user and then run whatever command it sent
-					Command c = Parse::parseHeader(buf, bytes);
+					Command c = parser.parseHeader(buf, bytes);
 					runCommand(c, sock);
+					//disconnect and remove from master
+					closesocket(sock);
+					FD_CLR(sock, &master);
+					std::cout << "User disconnected\n";
 				}
 			}
 		}

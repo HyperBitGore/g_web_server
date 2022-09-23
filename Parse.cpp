@@ -1,7 +1,5 @@
 #include "Parse.h"
-
-
-
+#include <fstream>
 
 std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t hsize) {
 	//check if get request
@@ -23,6 +21,9 @@ std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t 
 		if (loc.compare("/") == 0) {
 			loc = "index.html";
 		}
+		else {
+			loc.erase(loc.begin());
+		}
 		return loc;
 	}
 	//check if post request
@@ -40,5 +41,46 @@ Command Parse::parseHeader(char* header, size_t hsize) {
 	c.header = oss.str();
 	c.location = loc;
 	c.run = COM::GET;
+	return c;
+}
+
+
+
+void Parse::categorizeFile(std::ostringstream& oss, std::string file) {
+	for (auto& i : types) {
+		if (file.find(i.file_end.c_str()) != std::string::npos) {
+			oss << "Content-Type: " + i.write_type + "\r\n";
+			return;
+		}
+	}
+
+}
+//https://www.sitepoint.com/mime-types-complete-list/
+//https://mimetype.io/all-types/
+void Parse::generateFileTypes() {
+	//figure out way to just have this stored in some file; maybe scrape some site
+	FileType e1;
+	e1.file_end = ".html";
+	e1.write_type = "text/html";
+	types.push_back(e1);
+	e1.file_end = ".png";
+	e1.write_type = "image/png";
+	types.push_back(e1);
+}
+
+
+int Parse::getFileSize(std::string file) {
+	std::ifstream f;
+	f.open(file.c_str(), std::ios::binary);
+	//read through file line by line and count up each byte
+	int c = 0;
+	std::string line;
+	while (getline(f, line, '\n')) {
+		for (auto& i : line) {
+			c++;
+		}
+		c++;
+	}
+	c--;
 	return c;
 }

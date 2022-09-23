@@ -12,10 +12,12 @@ int main() {
 		std::cerr << "Can't init winsock!" << std::endl;
 		return -1;
 	}
-	std::ifstream file("/smed/temp.txt");
+	/*std::ifstream file;
+	std::string name = "index_files/first.png";
+	file.open(name.c_str(), std::ios::binary);
 	std::ostringstream ss;
 	ss << file.rdbuf();
-	std::cout << ss.str() << std::endl;
+	std::cout << ss.str() << std::endl;*/
 	Server serv;
 	bool exitf = false;
 	while (!exitf) {
