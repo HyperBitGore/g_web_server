@@ -1,5 +1,4 @@
 #include "Parse.h"
-#include <fstream>
 
 std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t hsize) {
 	//check if get request
@@ -66,6 +65,9 @@ void Parse::generateFileTypes() {
 	e1.file_end = ".png";
 	e1.write_type = "image/png";
 	types.push_back(e1);
+	e1.file_end = ".zip";
+	e1.write_type = "application/zip";
+	types.push_back(e1);
 }
 
 
@@ -83,4 +85,24 @@ int Parse::getFileSize(std::string file) {
 	}
 	c--;
 	return c;
+}
+
+void Config::readConfig() {
+	std::ifstream file;
+	file.open("config.dat");
+	if (!file) {
+		generateConfig();
+	}
+	file.open("config.dat");
+	//first line contains port
+	char c;
+	while (file.get(c) && c != '\n') {
+		
+	}
+	//second line contains list of allowed files
+	
+}
+
+void Config::generateConfig() {
+	
 }

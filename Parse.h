@@ -2,6 +2,7 @@
 #include "Utility.h"
 #include <sstream>
 #include <vector>
+#include <fstream>
 
 //probably only gonna implement post, get, and put
 enum class COM { POST, GET, HEAD, PUT, DEL, CONNECT, OPTIONS, TRACE };
@@ -35,4 +36,52 @@ public:
 	void categorizeFile(std::ostringstream& oss, std::string file);
 	//generate file type vectors
 	void generateFileTypes();
+};
+
+
+//not sending entirely correct file
+class FileBreak {
+private:
+	std::ifstream file;
+	int loc = 0;
+	int f_size;
+public:
+	FileBreak(std::string loc, int ins) {
+		file.open(loc.c_str(), std::ios::binary);
+		f_size = ins;
+	}
+	std::string getNextChunk() {
+		if (loc >= f_size) {
+			return "";
+		}
+		int c = 0;
+		char car;
+		std::string out;
+		while (c < 1048576 && file.get(car)) {
+			out.push_back(car);
+			c++;
+			loc++;
+		}
+		return out;
+	}
+	void close() {
+		file.close();
+	}
+};
+
+
+//will be expanded past this
+class Config {
+private:
+	int port;
+	std::vector<std::string> allowed_paths;
+public:
+	void generateConfig();
+	void readConfig();
+	int getPort() {
+		return port;
+	}
+	std::vector<std::string>& getPaths() {
+		return allowed_paths;
+	}
 };
