@@ -47,17 +47,42 @@ namespace UTIL{
 		char* dt = start;
 		size_t c = 0;
 		size_t posword = 0;
-		while (c < size && *dt != '\n') {
+		while (c < size && *dt != '\n' && posword < word.size()) {
 			if (*dt == word[posword]) {
 				posword++;
-				if (posword >= word.size()) {
-					return true;
-				}
 			}
 			c++;
 			dt++;
 		}
+		if (posword >= word.size()) {
+			return true;
+		}
 		return false;
+	}
+	static int countOccurence(std::string str, char c) {
+		int n = 0;
+		for (auto& i : str) {
+			if (i == c) {
+				n++;
+			}
+		}
+		return n;
+	}
+	static std::string extractPath(std::string path) {
+		//get number of /'s
+		int n = countOccurence(path, '/');
+		//loop through till we hit last /
+		std::string ret;
+		for (auto& i : path) {
+			ret.push_back(i);
+			if (i == '/') {
+				n--;
+				if (n <= 0) {
+					return ret;
+				}
+			}
+		}
+		return ret;
 	}
 }
 

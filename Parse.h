@@ -5,7 +5,7 @@
 #include <fstream>
 
 //probably only gonna implement post, get, and put
-enum class COM { POST, GET, HEAD, PUT, DEL, CONNECT, OPTIONS, TRACE };
+enum class COM { POST, GET, HEAD, PUT, DEL, CONNECT, OPTIONS, TRACE, ERR };
 
 struct Command {
 	COM run;
@@ -78,6 +78,7 @@ private:
 public:
 	void generateConfig();
 	void readConfig();
+	bool checkPath(std::string loc);
 	int getPort() {
 		return port;
 	}

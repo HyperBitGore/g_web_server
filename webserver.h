@@ -7,9 +7,6 @@
 
 //need larger file sending
 //add all mime types; use a big file, packaged with release so you can add mime types if you want
-//add config file
-//need file security; can't grab whatever file you want
-//set server to correct port
 //implement POST
 
 
@@ -20,6 +17,7 @@ private:
 	char buf[8192];
 	fd_set master;
 	SOCKET listener;
+	Config cof;
 	//only return identity encoding for now
 	//send html data back to socket, or whatever you want
 	void GET_Request(SOCKET sock, std::string path, std::string start) {
@@ -74,6 +72,7 @@ private:
 
 public:
 	Server() {
+		cof.readConfig();
 		FD_ZERO(&master);
 		//create listening socket and add to fd_set master
 		listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -82,7 +81,7 @@ public:
 		}
 		sockaddr_in hint;
 		hint.sin_family = AF_INET;
-		hint.sin_port = htons(8080);
+		hint.sin_port = htons(cof.getPort());
 		hint.sin_addr.S_un.S_addr = INADDR_ANY;
 		bind(listener, (sockaddr*)&hint, sizeof(hint));
 		//tells winsock that the socket is for listening
@@ -90,6 +89,8 @@ public:
 		FD_SET(listener, &master);
 		//generate file types
 		parser.generateFileTypes();
+		std::cout << "Started server on port " << cof.getPort() << std::endl;
+
 	}
 	void runCommand(Command com, SOCKET sock) {
 		switch (com.run) {
@@ -125,7 +126,6 @@ public:
 					inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
 					std::cout << host << " connected on port " << ntohs(client.sin_port) << std::endl;
 				}
-				ZeroMemory(buf, 8192);
 				//might need to do reply here, but we'll see
 				FD_SET(clientsocket, &master);
 			}
@@ -140,9 +140,13 @@ public:
 					std::cout << "User disconnected\n";
 				}
 				else {
+					//libre wolf sends https request so we can't read
 					//parse the header from user and then run whatever command it sent
 					Command c = parser.parseHeader(buf, bytes);
-					runCommand(c, sock);
+					//check if location is allowed
+					if (c.run != COM::ERR && cof.checkPath(c.location)) {
+						runCommand(c, sock);
+					}
 					//disconnect and remove from master
 					closesocket(sock);
 					FD_CLR(sock, &master);

@@ -3,6 +3,7 @@
 std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t hsize) {
 	//check if get request
 	if (UTIL::containedBeforeNewline(header, "GET", hsize)) {
+		//construct a bit of response header
 		oss << "HTTP/1.1 200 OK\r\n";
 		oss << "Cache-Control: no-cache, private\r\n";
 		oss << "Content-Encoding: identity\r\n";
@@ -29,6 +30,9 @@ std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t 
 	else if (UTIL::containedBeforeNewline(header, "POST", hsize)) {
 		
 	}
+	else {
+		return "";
+	}
 }
 
 //craft response headet through this
@@ -36,6 +40,11 @@ Command Parse::parseHeader(char* header, size_t hsize) {
 	std::ostringstream oss;
 	//read through header data and return enum command to run	
 	std::string loc = parseFirstLine(oss, header, hsize);
+	if (loc.compare("") == 0) {
+		Command c;
+		c.run = COM::ERR;
+		return c;
+	}
 	Command c;
 	c.header = oss.str();
 	c.location = loc;
@@ -92,17 +101,47 @@ void Config::readConfig() {
 	file.open("config.dat");
 	if (!file) {
 		generateConfig();
+		file.open("config.dat");
 	}
-	file.open("config.dat");
 	//first line contains port
 	char c;
-	while (file.get(c) && c != '\n') {
-		
+	while (file.get(c) && c != ':'); //getting to point right before port num
+	while (file.get(c) && !std::isdigit(c));//getting past any spaces
+	std::string num;
+	num.push_back(c);
+	while (file.get(c) && std::isdigit(c) && c != '\n') {
+		num.push_back(c);
 	}
+	port = std::atoi(num.c_str());
 	//second line contains list of allowed files
-	
+	std::string path;
+	while (file.get(c) && c != '\n') {
+		if (c == ':') {
+			allowed_paths.push_back(path);
+			path.clear();
+		}
+		else {
+			path.push_back(c);
+		}
+	}
 }
 
 void Config::generateConfig() {
-	
+	std::ofstream file;
+	file.open("config.dat");
+	file << "port: 80\nindex_files/:\n";
+	file.close();
+}
+//causing server to ignore all requests even when should be allowed
+bool Config::checkPath(std::string loc) {
+	if (loc.find("/") == std::string::npos) {
+		return true;
+	}
+	std::string path = UTIL::extractPath(loc);
+	for (auto& i : allowed_paths) {
+		if (i.find(path) != std::string::npos) {
+			return true;
+		}
+	}
+	return false;
 }
