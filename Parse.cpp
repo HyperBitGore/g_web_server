@@ -28,7 +28,7 @@ std::string Parse::parseFirstLine(std::ostringstream& oss, char* header, size_t 
 	}
 	//check if post request
 	else if (UTIL::containedBeforeNewline(header, "POST", hsize)) {
-		
+		return "";
 	}
 	else {
 		return "";
@@ -77,6 +77,23 @@ void Parse::generateFileTypes() {
 	e1.file_end = ".zip";
 	e1.write_type = "application/zip";
 	types.push_back(e1);
+}
+
+void Parse::loadMimeFile() {
+	std::ifstream file;
+	file.open("mime.dat");
+	if (!file) {
+		return;
+	}
+	//read file and parse each line
+	std::ostringstream oss;
+	oss << file.rdbuf();
+	file.close();
+	std::string s = oss.str();
+	FileType e1;
+	for (auto& i : s) {
+		
+	}
 }
 
 

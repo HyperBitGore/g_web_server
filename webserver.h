@@ -5,7 +5,6 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
-//need larger file sending
 //add all mime types; use a big file, packaged with release so you can add mime types if you want
 //implement POST
 
@@ -18,13 +17,15 @@ private:
 	fd_set master;
 	SOCKET listener;
 	Config cof;
+	FileBreak fb;
 	//only return identity encoding for now
 	//send html data back to socket, or whatever you want
-	void GET_Request(SOCKET sock, std::string path, std::string start) {
+	bool GET_Request(SOCKET sock, std::string path, std::string start) {
 		//get file size and decide whether to send multiple packets; if greater than 1mb send multiple packets
 		int size = parser.getFileSize(path);
-		if (size > 1048576) {
-			FileBreak fb(path, size);
+		//if file size is too big for one http packet, send multiple
+		if (size > (1048576)) {
+			fb.open(path, size);
 			//send intial packet with header, and then send the rest of the file in 1mb packets
 			std::ostringstream oss;
 			oss << start;
@@ -32,20 +33,19 @@ private:
 			//https://www.iana.org/assignments/media-types/media-types.xhtml
 			//need to categorize file types like this
 			parser.categorizeFile(oss, path);
-			//if file size is too big for one http packet, send multiple
 			oss << "Content-Length: " + std::to_string(size) + "\r\n";
 			oss << "\r\n";
 			oss << fb.getNextChunk();
 			//send requested file over socket
-			send(sock, oss.str().c_str(), oss.str().size() + 1, 0);
+			//we don't add a trailing zero byte here because it corrupts data
+			send(sock, oss.str().c_str(), oss.str().size(), 0);
 			oss.clear();
-			std::string input = "\n";
+			std::string input;
 			while ((input = fb.getNextChunk()).compare("") != 0) {
-				oss << input;
-				send(sock, oss.str().c_str(), oss.str().size() + 1, 0);
-				oss.clear();
+				send(sock, input.c_str(), input.size(), 0);
 			}
 			fb.close();
+			return true;
 		}
 		else {
 			//put request file in memory
@@ -60,13 +60,13 @@ private:
 			//https://www.iana.org/assignments/media-types/media-types.xhtml
 			//need to categorize file types like this
 			parser.categorizeFile(oss, path);
-			//if file size is too big for one http packet, send multiple
 			oss << "Content-Length: " + std::to_string(file.size()) + "\r\n";
 			oss << "\r\n";
 			oss << file;
 			//send requested file over socket
 			send(sock, oss.str().c_str(), oss.str().size() + 1, 0);
 			oss.clear();
+			return false;
 		}
 	}
 

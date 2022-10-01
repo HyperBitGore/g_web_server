@@ -5,7 +5,7 @@
 #include <fstream>
 
 //probably only gonna implement post, get, and put
-enum class COM { POST, GET, HEAD, PUT, DEL, CONNECT, OPTIONS, TRACE, ERR };
+enum class COM { POST, GET, ERR };
 
 struct Command {
 	COM run;
@@ -34,6 +34,8 @@ public:
 	int getFileSize(std::string file);
 	//categorize the file ending
 	void categorizeFile(std::ostringstream& oss, std::string file);
+	//loads mime type file
+	void loadMimeFile();
 	//generate file type vectors
 	void generateFileTypes();
 };
@@ -45,11 +47,39 @@ private:
 	std::ifstream file;
 	int loc = 0;
 	int f_size;
+	char* loc_p = nullptr;
 public:
+	FileBreak() {
+		f_size = 0;
+	}
 	FileBreak(std::string loc, int ins) {
 		file.open(loc.c_str(), std::ios::binary);
 		f_size = ins;
+		loc_p = (char*)file.rdbuf();
 	}
+	void open(std::string path, int ins) {
+		file.open(path.c_str(), std::ios::binary);
+		f_size = ins;
+		loc = 0;
+		loc_p = (char*)file.rdbuf();
+	}
+	std::string getNextChunk2() {
+		if (loc >= f_size) {
+			return "";
+		}
+		int count = 0;
+		char c;
+		std::string out;
+		std::string line;
+		while (count < 1048576 && getline(file, line)) {
+			out.append(line);
+			out.push_back('\n');
+			count += line.size() + 1;
+			loc += line.size() + 1;
+		}
+		return out;
+	}
+
 	std::string getNextChunk() {
 		if (loc >= f_size) {
 			return "";
