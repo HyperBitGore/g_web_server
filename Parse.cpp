@@ -65,6 +65,7 @@ void Parse::categorizeFile(std::ostringstream& oss, std::string file) {
 }
 //https://www.sitepoint.com/mime-types-complete-list/
 //https://mimetype.io/all-types/
+//https://www.freeformatter.com/mime-types-list.html
 void Parse::generateFileTypes() {
 	//figure out way to just have this stored in some file; maybe scrape some site
 	FileType e1;
@@ -91,8 +92,44 @@ void Parse::loadMimeFile() {
 	file.close();
 	std::string s = oss.str();
 	FileType e1;
+	//switch this for write_type or file_end
+	bool type = true;
+	std::string write_type;
+	std::string end;
+	int c = 0;
 	for (auto& i : s) {
-		
+		if (type) {
+			if (i != ':') {
+				write_type.push_back(i);
+			}
+			else {
+				type = false;
+				c = 0;
+			}
+		}
+		else {
+			if (i != '\n' && i != '.') {
+				end.push_back(i);
+			}
+			else if (i == '.') {
+				c++;
+				if (c > 1) {
+					e1.file_end = end;
+					e1.write_type = write_type;
+					types.push_back(e1);
+					end.clear();
+				}
+				end.push_back(i);
+			}
+			else {
+				e1.file_end = end;
+				e1.write_type = write_type;
+				types.push_back(e1);
+				end.clear();
+				write_type.clear();
+				type = true;
+			}
+		}
 	}
 }
 

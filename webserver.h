@@ -69,7 +69,9 @@ private:
 			return false;
 		}
 	}
-
+	void POST_Request(SOCKET sock, std::string path, std::string start) {
+		
+	}
 public:
 	Server() {
 		cof.readConfig();
@@ -88,7 +90,8 @@ public:
 		listen(listener, SOMAXCONN);
 		FD_SET(listener, &master);
 		//generate file types
-		parser.generateFileTypes();
+		//parser.generateFileTypes();
+		parser.loadMimeFile();
 		std::cout << "Started server on port " << cof.getPort() << std::endl;
 
 	}
@@ -156,13 +159,5 @@ public:
 		}
 
 	}
-
-};
-
-//send commands to server on seperate thread????
-class CommandHandler {
-private:
-
-public:
 
 };

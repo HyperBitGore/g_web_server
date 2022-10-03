@@ -47,39 +47,23 @@ private:
 	std::ifstream file;
 	int loc = 0;
 	int f_size;
-	char* loc_p = nullptr;
+	int chunk_size;
 public:
 	FileBreak() {
 		f_size = 0;
+		chunk_size = 1048576;
 	}
-	FileBreak(std::string loc, int ins) {
+	FileBreak(std::string loc, int ins, int chunk) {
 		file.open(loc.c_str(), std::ios::binary);
 		f_size = ins;
-		loc_p = (char*)file.rdbuf();
+		chunk_size = chunk;
 	}
-	void open(std::string path, int ins) {
+	void open(std::string path, int ins, int chunk = 1048576) {
 		file.open(path.c_str(), std::ios::binary);
 		f_size = ins;
 		loc = 0;
-		loc_p = (char*)file.rdbuf();
+		chunk_size = chunk;
 	}
-	std::string getNextChunk2() {
-		if (loc >= f_size) {
-			return "";
-		}
-		int count = 0;
-		char c;
-		std::string out;
-		std::string line;
-		while (count < 1048576 && getline(file, line)) {
-			out.append(line);
-			out.push_back('\n');
-			count += line.size() + 1;
-			loc += line.size() + 1;
-		}
-		return out;
-	}
-
 	std::string getNextChunk() {
 		if (loc >= f_size) {
 			return "";
@@ -87,7 +71,7 @@ public:
 		int c = 0;
 		char car;
 		std::string out;
-		while (c < 1048576 && file.get(car)) {
+		while (c < chunk_size && file.get(car)) {
 			out.push_back(car);
 			c++;
 			loc++;
@@ -104,6 +88,7 @@ public:
 class Config {
 private:
 	int port;
+	int max_size;
 	std::vector<std::string> allowed_paths;
 public:
 	void generateConfig();
@@ -111,6 +96,9 @@ public:
 	bool checkPath(std::string loc);
 	int getPort() {
 		return port;
+	}
+	int getMaxSize() {
+		return max_size;
 	}
 	std::vector<std::string>& getPaths() {
 		return allowed_paths;
