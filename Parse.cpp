@@ -80,9 +80,80 @@ void Parse::generateFileTypes() {
 	types.push_back(e1);
 }
 
+/*void convertFileToMime() {
+	std::ifstream file;
+	std::vector<FileType> types;
+	std::ostringstream oss;
+	file.open("list.html");
+	oss << file.rdbuf();
+	file.close();
+	std::string str = oss.str();
+	size_t off = 0;
+	//getting to section to be parsed
+	for (int i = 0; i < 2; i++) {
+		off = str.find("<tr>", off);
+	}
+	//now start actual loop
+	while (off < str.size()) {
+		FileType e1;
+		//find second <td>
+		for (int i = 0; i < 2; i++) {
+			off = str.find("<td>", off);
+			off += 4;
+		}
+		//add to FileType
+		while (str[off] != '<') {
+			e1.write_type.push_back(str[off]);
+			off++;
+		}
+		//go to third <td>
+		off = str.find("<td>", off);
+		//add to FileType
+		off += 4;
+		while (str[off] != '<') {
+			e1.file_end.push_back(str[off]);
+			off++;
+		}
+		//parse of there are multiple types in file_type
+		size_t p;
+		if ((p = e1.file_end.find(", ")) != std::string::npos) {
+			//remove double from e1
+			std::string nu2;
+			p = 0;
+			while (e1.file_end[p] != ',') {
+				nu2.push_back(e1.file_end[p]);
+				p++;
+			}
+			std::string nu;
+			p+=2;
+			while (p < e1.file_end.size()) {
+				nu.push_back(e1.file_end[p]);
+				p++;
+			}
+			e1.file_end = nu;
+			types.push_back(e1);
+			e1.file_end = nu2;
+			types.push_back(e1);
+		}
+		else {
+			types.push_back(e1);
+		}
+		//go to next <tr>
+		off = str.find("<tr>", off);
+	}
+	//std::cout << types[0].file_end << "\n";
+	//now write types
+	std::ofstream f;
+	f.open("mime.txt");
+	for (auto& i : types) {
+		f << i.write_type << ":" << i.file_end << "\n";
+	}
+	f.close();
+}
+*/
 void Parse::loadMimeFile() {
 	std::ifstream file;
-	file.open("mime.dat");
+	file.open("mime.txt");
 	if (!file) {
 		return;
 	}

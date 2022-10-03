@@ -5,7 +5,6 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
-//add all mime types; use a big file, packaged with release so you can add mime types if you want
 //implement POST
 
 
@@ -89,8 +88,7 @@ public:
 		//tells winsock that the socket is for listening
 		listen(listener, SOMAXCONN);
 		FD_SET(listener, &master);
-		//generate file types
-		//parser.generateFileTypes();
+		//loads file types
 		parser.loadMimeFile();
 		std::cout << "Started server on port " << cof.getPort() << std::endl;
 
