@@ -80,77 +80,6 @@ void Parse::generateFileTypes() {
 	types.push_back(e1);
 }
 
-/*void convertFileToMime() {
-	std::ifstream file;
-	std::vector<FileType> types;
-	std::ostringstream oss;
-	file.open("list.html");
-	oss << file.rdbuf();
-	file.close();
-	std::string str = oss.str();
-	size_t off = 0;
-	//getting to section to be parsed
-	for (int i = 0; i < 2; i++) {
-		off = str.find("<tr>", off);
-	}
-	//now start actual loop
-	while (off < str.size()) {
-		FileType e1;
-		//find second <td>
-		for (int i = 0; i < 2; i++) {
-			off = str.find("<td>", off);
-			off += 4;
-		}
-		//add to FileType
-		while (str[off] != '<') {
-			e1.write_type.push_back(str[off]);
-			off++;
-		}
-		//go to third <td>
-		off = str.find("<td>", off);
-		//add to FileType
-		off += 4;
-		while (str[off] != '<') {
-			e1.file_end.push_back(str[off]);
-			off++;
-		}
-		//parse of there are multiple types in file_type
-		size_t p;
-		if ((p = e1.file_end.find(", ")) != std::string::npos) {
-			//remove double from e1
-			std::string nu2;
-			p = 0;
-			while (e1.file_end[p] != ',') {
-				nu2.push_back(e1.file_end[p]);
-				p++;
-			}
-			std::string nu;
-			p+=2;
-			while (p < e1.file_end.size()) {
-				nu.push_back(e1.file_end[p]);
-				p++;
-			}
-			e1.file_end = nu;
-			types.push_back(e1);
-			e1.file_end = nu2;
-			types.push_back(e1);
-		}
-		else {
-			types.push_back(e1);
-		}
-		//go to next <tr>
-		off = str.find("<tr>", off);
-	}
-	//std::cout << types[0].file_end << "\n";
-	//now write types
-	std::ofstream f;
-	f.open("mime.txt");
-	for (auto& i : types) {
-		f << i.write_type << ":" << i.file_end << "\n";
-	}
-	f.close();
-}
-*/
 void Parse::loadMimeFile() {
 	std::ifstream file;
 	file.open("mime.txt");
@@ -238,7 +167,16 @@ void Config::readConfig() {
 		num.push_back(c);
 	}
 	port = std::atoi(num.c_str());
-	//second line contains list of allowed files
+	//second line contains size to chunk files at
+	while (file.get(c) && c != ':');
+	while (file.get(c) && !std::isdigit(c));//getting past any spaces
+	num.clear();
+	num.push_back(c);
+	while (file.get(c) && std::isdigit(c) && c != '\n') {
+		num.push_back(c);
+	}
+	max_size = std::atoi(num.c_str());
+	//third line contains list of allowed files
 	std::string path;
 	while (file.get(c) && c != '\n') {
 		if (c == ':') {
@@ -254,7 +192,7 @@ void Config::readConfig() {
 void Config::generateConfig() {
 	std::ofstream file;
 	file.open("config.dat");
-	file << "port: 80\nindex_files/:\n";
+	file << "port: 80\nchunk-size: 5242880\nindex_files/:\n";
 	file.close();
 }
 //causing server to ignore all requests even when should be allowed

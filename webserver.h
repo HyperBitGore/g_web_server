@@ -5,7 +5,6 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
-//implement POST
 
 
 //https://developer.mozilla.org/en-US/docs/Glossary/HTTP_header
@@ -23,7 +22,7 @@ private:
 		//get file size and decide whether to send multiple packets; if greater than 1mb send multiple packets
 		int size = parser.getFileSize(path);
 		//if file size is too big for one http packet, send multiple
-		if (size > (1048576)) {
+		if (size > cof.getMaxSize()) {
 			fb.open(path, size);
 			//send intial packet with header, and then send the rest of the file in 1mb packets
 			std::ostringstream oss;
